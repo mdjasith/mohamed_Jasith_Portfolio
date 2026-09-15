@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { loginAdmin } from "../services/authService";
 
 function AdminLogin() {
-
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -13,26 +12,21 @@ function AdminLogin() {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event) => {
-
     event.preventDefault();
 
     setError("");
     setLoading(true);
 
     try {
-
       await loginAdmin(email, password);
 
       navigate("/admin/dashboard");
-
     } catch (error) {
-
       console.error(error);
 
       setError(
         "Authentication failed. Check your email and password."
       );
-
     } finally {
       setLoading(false);
     }
@@ -40,7 +34,6 @@ function AdminLogin() {
 
   return (
     <div className="admin-page">
-
       <div className="admin-grid"></div>
 
       <div className="admin-login-container">
@@ -67,10 +60,17 @@ function AdminLogin() {
             Authenticate to access portfolio management.
           </p>
 
+          {/* AUTHORIZATION NOTICE */}
+          <div className="admin-authorized-notice">
+            <strong>AUTHORIZED PERSONNEL ONLY</strong>
+            <span>
+              This administration area is restricted to authorized users.
+            </span>
+          </div>
+
           <form onSubmit={handleSubmit}>
 
             <div className="form-group">
-
               <label>
                 EMAIL
               </label>
@@ -84,11 +84,9 @@ function AdminLogin() {
                 }
                 required
               />
-
             </div>
 
             <div className="form-group">
-
               <label>
                 PASSWORD
               </label>
@@ -102,7 +100,6 @@ function AdminLogin() {
                 }
                 required
               />
-
             </div>
 
             {error && (
@@ -126,11 +123,10 @@ function AdminLogin() {
         </div>
 
         <p className="admin-warning">
-          AUTHORIZED PERSONNEL ONLY
+          ⚠ RESTRICTED SYSTEM — UNAUTHORIZED ACCESS PROHIBITED
         </p>
 
       </div>
-
     </div>
   );
 }
