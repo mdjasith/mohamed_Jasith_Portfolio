@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <rect width="500" height="500" fill="#05070d"/>
+  <rect
+    x="35"
+    y="35"
+    width="430"
+    height="430"
+    fill="none"
+    stroke="#00f5ff"
+    stroke-width="2"
+  />
+  <text
+    x="250"
+    y="285"
+    text-anchor="middle"
+    fill="#00f5ff"
+    font-family="monospace"
+    font-size="100"
+    font-weight="bold"
+  >
+    MJ
+  </text>
+</svg>
+
+
+
+
+
+
+
