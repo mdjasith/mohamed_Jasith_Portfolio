@@ -203,20 +203,19 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listenToAuth, logoutAdmin } from "../services/authService";
-// import {
-//   getSkills, addSkill, updateSkill, deleteSkill,
-//   getProjects, addProject, updateProject, deleteProject,
-//   getPortfolioMeta, savePortfolioMeta,
-//   uploadResume, deleteResume,
-// } from "../services/portfolioService";
-
 import {
   getSkills, addSkill, updateSkill, deleteSkill,
   getProjects, addProject, updateProject, deleteProject,
   getPortfolioMeta, savePortfolioMeta,
   uploadResumeAsBase64, deleteResumeBase64,
 } from "../services/portfolioService";
-
+import {
+  getAnalyticsSummary,
+  getDailyHistory,
+  getVisits,
+  deleteVisit,
+  clearAllVisits,
+} from "../services/analyticsService";
 import TechLogo from "../components/TechLogo";
 
 const emptySkill = { name: "", category: "", level: 50, order: 0 };
@@ -239,6 +238,14 @@ function AdminDashboard() {
     resumeUrl: "", resumePath: "",
   });
 
+  /* ---------- ANALYTICS STATE ---------- */
+  const [analytics, setAnalytics] = useState({
+    total: 0, today: 0, lastDate: "", lastVisit: null,
+  });
+  const [daily, setDaily] = useState([]);
+  const [visits, setVisits] = useState([]);
+  const [visitSearch, setVisitSearch] = useState("");
+
   const [modal, setModal] = useState(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -254,12 +261,20 @@ function AdminDashboard() {
 
   const refresh = useCallback(async () => {
     try {
-      const [s, p, m] = await Promise.all([
-        getSkills(), getProjects(), getPortfolioMeta(),
+      const [s, p, m, a, d, v] = await Promise.all([
+        getSkills(),
+        getProjects(),
+        getPortfolioMeta(),
+        getAnalyticsSummary(),
+        getDailyHistory(14),
+        getVisits(200),
       ]);
       setSkills(s);
       setProjects(p);
       if (m) setMeta((prev) => ({ ...prev, ...m }));
+      setAnalytics(a);
+      setDaily(d);
+      setVisits(v);
     } catch (err) {
       console.error("Refresh failed:", err);
     }
@@ -303,27 +318,21 @@ function AdminDashboard() {
     }
   };
 
-//   const removeSkill = async (id) => {
-//     if (!confirm("Delete this skill?")) return;
-//     await deleteSkill(id);
-//     await refresh();
-//   };
-
   const removeSkill = async (id) => {
-  if (!id) {
-    alert("This skill has no ID (bad Firestore doc). Check the skills collection.");
-    return;
-  }
-  if (!confirm("Delete this skill?")) return;
+    if (!id) {
+      alert("This skill has no ID (bad Firestore doc). Check the skills collection.");
+      return;
+    }
+    if (!confirm("Delete this skill?")) return;
 
-  try {
-    await deleteSkill(id);
-    await refresh();
-  } catch (err) {
-    console.error("[deleteSkill]", err);
-    alert("Delete failed: " + (err?.message || err));
-  }
-};
+    try {
+      await deleteSkill(id);
+      await refresh();
+    } catch (err) {
+      console.error("[deleteSkill]", err);
+      alert("Delete failed: " + (err?.message || err));
+    }
+  };
 
   /* ---------- PROJECTS ---------- */
   const openProjectModal = (project) =>
@@ -360,30 +369,23 @@ function AdminDashboard() {
     }
   };
 
-//   const removeProject = async (id) => {
-//     if (!confirm("Delete this project?")) return;
-//     await deleteProject(id);
-//     await refresh();
-//   };
+  const removeProject = async (id) => {
+    if (!id) {
+      alert("This project has no ID (bad Firestore doc). Check the projects collection.");
+      return;
+    }
+    if (!confirm("Delete this project?")) return;
 
+    try {
+      await deleteProject(id);
+      await refresh();
+    } catch (err) {
+      console.error("[deleteProject]", err);
+      alert("Delete failed: " + (err?.message || err));
+    }
+  };
 
-const removeProject = async (id) => {
-  if (!id) {
-    alert("This project has no ID (bad Firestore doc). Check the projects collection.");
-    return;
-  }
-  if (!confirm("Delete this project?")) return;
-
-  try {
-    await deleteProject(id);
-    await refresh();
-  } catch (err) {
-    console.error("[deleteProject]", err);
-    alert("Delete failed: " + (err?.message || err));
-  }
-};
-
-  /* ---------- META (about / contact) ---------- */
+  /* ---------- META ---------- */
   const openMetaModal = (type) => setModal({ type, data: { ...meta } });
 
   const saveMeta = async (data) => {
@@ -400,61 +402,80 @@ const removeProject = async (id) => {
   };
 
   /* ---------- RESUME ---------- */
-//   const onResumeUpload = async (e) => {
-//     const file = e.target.files?.[0];
-//     e.target.value = "";
-//     if (!file) return;
+  const onResumeUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
 
-//     setUploading(true);
-//     try {
-//       if (meta.resumePath) await deleteResume(meta.resumePath);
-//       await uploadResume(file);
-//       await refresh();
-//       alert("Resume uploaded successfully.");
-//     } catch (err) {
-//       alert("Upload failed: " + err.message);
-//     } finally {
-//       setUploading(false);
-//     }
-//   };
+    setUploading(true);
+    try {
+      await uploadResumeAsBase64(file);
+      await refresh();
+      alert("✅ Resume uploaded successfully.");
+    } catch (err) {
+      console.error("[uploadResumeAsBase64]", err);
+      alert("❌ Upload failed\n\n" + (err?.message || err));
+    } finally {
+      setUploading(false);
+    }
+  };
 
+  const onResumeDelete = async () => {
+    if (!confirm("Delete current resume?")) return;
+    try {
+      await deleteResumeBase64();
+      await refresh();
+    } catch (err) {
+      console.error("[deleteResumeBase64]", err);
+      alert("Delete failed: " + (err?.message || err));
+    }
+  };
 
+  /* ---------- VISITS ---------- */
+  const removeVisit = async (id) => {
+    if (!confirm("Delete this visit record?")) return;
+    try {
+      await deleteVisit(id);
+      await refresh();
+    } catch (err) {
+      alert("Delete failed: " + err.message);
+    }
+  };
 
+  const wipeAllVisits = async () => {
+    if (!confirm("Delete ALL visit logs? This cannot be undone.")) return;
+    try {
+      await clearAllVisits();
+      await refresh();
+    } catch (err) {
+      alert("Wipe failed: " + err.message);
+    }
+  };
 
-//   const onResumeDelete = async () => {
-//     if (!confirm("Delete current resume?")) return;
-//     await deleteResume(meta.resumePath);
-//     await refresh();
-//   };
+  const formatDate = (iso) => {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    return d.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
-const onResumeUpload = async (e) => {
-  const file = e.target.files?.[0];
-  e.target.value = "";
-  if (!file) return;
-
-  setUploading(true);
-  try {
-    await uploadResumeAsBase64(file);
-    await refresh();
-    alert("✅ Resume uploaded successfully.");
-  } catch (err) {
-    console.error("[uploadResumeAsBase64]", err);
-    alert("❌ Upload failed\n\n" + (err?.message || err));
-  } finally {
-    setUploading(false);
-  }
-};
-
-const onResumeDelete = async () => {
-  if (!confirm("Delete current resume?")) return;
-  try {
-    await deleteResumeBase64();
-    await refresh();
-  } catch (err) {
-    console.error("[deleteResumeBase64]", err);
-    alert("Delete failed: " + (err?.message || err));
-  }
-};
+  const filteredVisits = visits.filter((v) => {
+    if (!visitSearch) return true;
+    const q = visitSearch.toLowerCase();
+    return (
+      (v.ip || "").toLowerCase().includes(q) ||
+      (v.country || "").toLowerCase().includes(q) ||
+      (v.city || "").toLowerCase().includes(q) ||
+      (v.browser || "").toLowerCase().includes(q) ||
+      (v.os || "").toLowerCase().includes(q) ||
+      (v.device || "").toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="dashboard-page">
@@ -465,19 +486,21 @@ const onResumeDelete = async () => {
         </div>
 
         <nav>
-          {["overview", "about", "skills", "projects", "resume"].map((t) => (
-            <a
-              key={t}
-              href={`#${t}`}
-              className={tab === t ? "active" : ""}
-              onClick={(e) => {
-                e.preventDefault();
-                setTab(t);
-              }}
-            >
-              {t[0].toUpperCase() + t.slice(1)}
-            </a>
-          ))}
+          {["overview", "analytics", "visitors", "about", "skills", "projects", "resume"].map(
+            (t) => (
+              <a
+                key={t}
+                href={`#${t}`}
+                className={tab === t ? "active" : ""}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setTab(t);
+                }}
+              >
+                {t[0].toUpperCase() + t.slice(1)}
+              </a>
+            )
+          )}
         </nav>
 
         <button className="dashboard-logout" onClick={handleLogout}>
@@ -495,6 +518,7 @@ const onResumeDelete = async () => {
         </header>
 
         <section className="dashboard-content" style={{ display: "block" }}>
+          {/* ============ OVERVIEW ============ */}
           {tab === "overview" && (
             <div className="dashboard-cards-grid">
               <div className="dashboard-card">
@@ -521,9 +545,179 @@ const onResumeDelete = async () => {
                 <p>Update profile & social links.</p>
                 <button onClick={() => setTab("about")}>MANAGE →</button>
               </div>
+              <div className="dashboard-card">
+                <span className="dashboard-card-number">05</span>
+                <h2>Views</h2>
+                <p>
+                  {analytics.total || 0} total · {analytics.today || 0} today
+                </p>
+                <button onClick={() => setTab("analytics")}>VIEW →</button>
+              </div>
+              <div className="dashboard-card">
+                <span className="dashboard-card-number">06</span>
+                <h2>Visitors</h2>
+                <p>{visits.length} visit records.</p>
+                <button onClick={() => setTab("visitors")}>VIEW →</button>
+              </div>
             </div>
           )}
 
+          {/* ============ ANALYTICS ============ */}
+          {tab === "analytics" && (
+            <div className="analytics-panel">
+              <div className="analytics-cards">
+                <div className="analytics-card">
+                  <span className="analytics-label">TOTAL VIEWS</span>
+                  <strong className="analytics-value">
+                    {analytics.total?.toLocaleString() || 0}
+                  </strong>
+                  <small className="analytics-sub">All time</small>
+                </div>
+
+                <div className="analytics-card">
+                  <span className="analytics-label">TODAY</span>
+                  <strong className="analytics-value">
+                    {analytics.today?.toLocaleString() || 0}
+                  </strong>
+                  <small className="analytics-sub">
+                    {analytics.lastDate || "—"}
+                  </small>
+                </div>
+
+                <div className="analytics-card">
+                  <span className="analytics-label">LAST 14 DAYS</span>
+                  <strong className="analytics-value">
+                    {daily.reduce((sum, d) => sum + (d.count || 0), 0)}
+                  </strong>
+                  <small className="analytics-sub">Recent traffic</small>
+                </div>
+              </div>
+
+              {daily.length > 0 && (
+                <div className="analytics-chart">
+                  <h3>Daily views</h3>
+                  <div className="analytics-bars">
+                    {daily
+                      .slice()
+                      .reverse()
+                      .map((d) => {
+                        const max = Math.max(...daily.map((x) => x.count || 1));
+                        const heightPct = Math.max(
+                          4,
+                          Math.round(((d.count || 0) / max) * 100)
+                        );
+                        const [, month, day] = (d.date || "").split("-");
+
+                        return (
+                          <div className="analytics-bar-wrap" key={d.date}>
+                            <div
+                              className="analytics-bar"
+                              style={{ height: `${heightPct}%` }}
+                              title={`${d.count} views on ${d.date}`}
+                            />
+                            <span className="analytics-bar-label">
+                              {day}/{month}
+                            </span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
+              {daily.length === 0 && (
+                <p style={{ color: "var(--text-muted)", fontSize: "0.7rem" }}>
+                  No data yet. Visit your portfolio home page to start counting.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ============ VISITORS ============ */}
+          {tab === "visitors" && (
+            <div className="visitors-panel">
+              <div className="visitors-toolbar">
+                <input
+                  type="text"
+                  placeholder="Search IP, country, city, browser…"
+                  value={visitSearch}
+                  onChange={(e) => setVisitSearch(e.target.value)}
+                  className="visitors-search"
+                />
+                <button className="dashboard-add danger" onClick={wipeAllVisits}>
+                  CLEAR ALL
+                </button>
+              </div>
+
+              <div className="visitors-table-wrap">
+                <table className="visitors-table">
+                  <thead>
+                    <tr>
+                      <th>DATE / TIME</th>
+                      <th>IP</th>
+                      <th>LOCATION</th>
+                      <th>DEVICE</th>
+                      <th>BROWSER</th>
+                      <th>REFERRER</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredVisits.map((v) => (
+                      <tr key={v.id}>
+                        <td>{formatDate(v.time)}</td>
+                        <td className="mono">{v.ip}</td>
+                        <td>
+                          {v.city && <div>{v.city}</div>}
+                          <small>
+                            {v.region && `${v.region}, `}
+                            {v.country || "—"}
+                          </small>
+                        </td>
+                        <td>
+                          {v.device}
+                          <small>{v.os}</small>
+                        </td>
+                        <td>{v.browser}</td>
+                        <td>
+                          {v.referrer === "direct" ? (
+                            <span className="muted">direct</span>
+                          ) : (
+                            <span title={v.referrer}>
+                              {(v.referrer || "")
+                                .replace(/^https?:\/\//, "")
+                                .slice(0, 30)}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <button
+                            className="row-delete"
+                            onClick={() => removeVisit(v.id)}
+                            title="Delete"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredVisits.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan="7"
+                          style={{ textAlign: "center", padding: "30px" }}
+                        >
+                          No visits recorded yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ============ ABOUT ============ */}
           {tab === "about" && (
             <div className="dashboard-list">
               <button
@@ -558,6 +752,7 @@ const onResumeDelete = async () => {
             </div>
           )}
 
+          {/* ============ SKILLS ============ */}
           {tab === "skills" && (
             <>
               <button
@@ -597,6 +792,7 @@ const onResumeDelete = async () => {
             </>
           )}
 
+          {/* ============ PROJECTS ============ */}
           {tab === "projects" && (
             <>
               <button
@@ -638,6 +834,7 @@ const onResumeDelete = async () => {
             </>
           )}
 
+          {/* ============ RESUME ============ */}
           {tab === "resume" && (
             <div className="dashboard-list">
               <div className="dashboard-row">

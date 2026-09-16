@@ -1941,3 +1941,359 @@ button {
   font-weight: 900;
   letter-spacing: 1.5px;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   BRAND LOGO WITH SVG
+========================================= */
+/*
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.25s ease;
+}
+
+.brand-logo:hover {
+  color: var(--text);
+  transform: translateY(-2px);
+}
+
+.brand-logo-image {
+  width: 42px;
+  height: 46px;
+  display: block;
+  object-fit: contain;
+
+  filter:
+    drop-shadow(0 0 5px var(--cyan))
+    drop-shadow(0 0 12px rgba(0, 245, 255, 0.4));
+}
+
+.brand-logo-text {
+  color: var(--cyan);
+  font-family: var(--font-code);
+  font-size: 21px;
+  font-weight: 900;
+  letter-spacing: 1px;
+
+  text-shadow:
+    0 0 5px var(--cyan),
+    0 0 14px rgba(0, 245, 255, 0.45);
+}
+
+/* Mobile */
+/*
+@media (max-width: 600px) {
+  .brand-logo-image {
+    width: 34px;
+    height: 38px;
+  }
+
+  .brand-logo-text {
+    font-size: 17px;
+  }
+} */
+
+
+/* ============ BRAND LOGO ============ */
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  text-decoration: none;
+  line-height: 0;
+}
+
+.brand-logo-image {
+  height: 62px;
+  width: auto;
+  max-width: 100%;
+  display: block;
+  object-fit: contain;
+  transition: 0.3s ease;
+  filter: drop-shadow(0 0 8px rgba(0, 245, 255, 0.35));
+}
+
+.brand-logo:hover .brand-logo-image {
+  filter: drop-shadow(0 0 14px rgba(0, 245, 255, 0.7));
+  transform: scale(1.05);
+}
+
+/* Mobile — even smaller */
+@media (max-width: 760px) {
+  .brand-logo {
+    height: 34px;
+  }
+
+  .brand-logo-image {
+    height: 30px;
+  }
+}
+
+@media (max-width: 380px) {
+  .brand-logo {
+    height: 30px;
+  }
+
+  .brand-logo-image {
+    height: 36px;
+  }
+}
+
+/* Footer version slightly larger */
+.footer .brand-logo {
+  height: 76px;
+}
+
+.footer .brand-logo-image {
+  height: 72px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   HERO MOUSE FOLLOWING EMOJI
+========================================= */
+
+.hero-section {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hero-follow-emoji {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 64px;
+  height: 64px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 42px;
+  line-height: 1;
+
+  pointer-events: none;
+  user-select: none;
+
+  z-index: 5;
+
+  transform: translate(-100px, -100px);
+
+  transition:
+    transform 0.12s ease-out,
+    filter 0.2s ease;
+
+  filter:
+    drop-shadow(0 0 5px var(--cyan))
+    drop-shadow(0 0 15px rgba(0, 245, 255, 0.7));
+
+  animation: heroEmojiFloat 3s ease-in-out infinite;
+}
+
+@keyframes heroEmojiFloat {
+  0%,
+  100% {
+    margin-top: 0;
+  }
+
+  50% {
+    margin-top: -8px;
+  }
+}
+
+/* Optional cyberpunk circle behind emoji */
+.hero-follow-emoji::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  border: 1px solid var(--cyan);
+  border-radius: 50%;
+
+  background: rgba(0, 245, 255, 0.06);
+
+  box-shadow:
+    0 0 10px rgba(0, 245, 255, 0.5),
+    inset 0 0 10px rgba(0, 245, 255, 0.2);
+
+  z-index: -1;
+}
+
+/* Hide mouse-following emoji on touch/mobile devices */
+@media (max-width: 768px) {
+  .hero-follow-emoji {
+    display: none;
+  }
+}
+
+/* Respect reduced-motion accessibility setting */
+@media (prefers-reduced-motion: reduce) {
+  .hero-follow-emoji {
+    animation: none;
+    transition: none;
+  }
+}
+
+
+
+
+
+
+
+
+
+/* ============ VISITORS TABLE ============ */
+
+.visitors-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.visitors-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.visitors-search {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.72rem;
+  outline: none;
+}
+
+.visitors-search:focus {
+  border-color: var(--cyan);
+}
+
+.dashboard-add.danger {
+  border-color: rgba(255, 60, 172, 0.4);
+  color: #ff6dbb;
+  background: rgba(255, 60, 172, 0.06);
+}
+
+.dashboard-add.danger:hover {
+  background: rgba(255, 60, 172, 0.12);
+}
+
+.visitors-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  background: rgba(10, 14, 24, 0.7);
+  border-radius: 4px;
+}
+
+.visitors-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+  font-size: 0.7rem;
+}
+
+.visitors-table thead {
+  background: rgba(0, 245, 255, 0.05);
+}
+
+.visitors-table th {
+  text-align: left;
+  padding: 14px 16px;
+  color: var(--cyan);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
+}
+
+.visitors-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  vertical-align: top;
+}
+
+.visitors-table td small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.58rem;
+  margin-top: 3px;
+}
+
+.visitors-table tr:hover {
+  background: rgba(0, 245, 255, 0.03);
+}
+
+.visitors-table .mono {
+  font-family: var(--font-code);
+  color: #5dff9a;
+  font-size: 0.68rem;
+}
+
+.visitors-table .muted {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.row-delete {
+  background: transparent;
+  border: 1px solid rgba(255, 60, 172, 0.25);
+  color: #ff6dbb;
+  width: 24px;
+  height: 24px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  display: grid;
+  place-items: center;
+}
+
+.row-delete:hover {
+  background: rgba(255, 60, 172, 0.1);
+  border-color: #ff6dbb;
+}
+
+@media (max-width: 760px) {
+  .visitors-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .visitors-search {
+    font-size: 0.68rem;
+  }
+}
